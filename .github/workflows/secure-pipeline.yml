@@ -1,6 +1,3 @@
-# Ruta: .github/workflows/secure-pipeline.yml
-# Qué hace: Define la estructura base del pipeline y declara la variable no sensible globalmente.
-
 name: Secure Pipeline
 
 on:
@@ -11,3 +8,19 @@ on:
 
 env:
   NON_SENSITIVE_VAR: "App_v1" # Variable no sensible accesible en todo el workflow
+
+permissions:
+  contents: read # Permiso mínimo a nivel workflow
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Permiso mínimo a nivel job
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      - name: Construir aplicación
+        run: echo "Construyendo $NON_SENSITIVE_VAR..."
+      - name: Validar tests
+        run: echo "Tests validados correctamente."
