@@ -1,0 +1,13 @@
+# Ruta: .github/workflows/secure-pipeline.yml
+# Qué hace: Define la estructura base del pipeline y declara la variable no sensible globalmente.
+
+name: Secure Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NON_SENSITIVE_VAR: "App_v1" # Variable no sensible accesible en todo el workflow
