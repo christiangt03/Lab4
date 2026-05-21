@@ -17,10 +17,16 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read # Permiso mínimo a nivel job
-    steps:
+ steps:
       - name: Checkout código
         uses: actions/checkout@v4
-      - name: Construir aplicación
-        run: echo "Construyendo $NON_SENSITIVE_VAR..."
-      - name: Validar tests
+        
+      - name: Demostrar diferencia entre vars y secrets
+        env:
+          MI_SECRETO: ${{ secrets.API_SECRET }}
+        run: |
+          echo "La variable no sensible muestra su valor: $NON_SENSITIVE_VAR"
+          echo "El secreto por seguridad se oculta: $MI_SECRETO"
+          
+      - name: Construir aplicación y validar
         run: echo "Tests validados correctamente."
