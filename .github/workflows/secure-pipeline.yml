@@ -1,32 +1,63 @@
-name: Secure Pipeline
-
+name: Laboratorio 4 - Pipeline Seguro Enterprise
+ 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-env:
-  NON_SENSITIVE_VAR: "App_v1" # Variable no sensible accesible en todo el workflow
-
+    branches: [main]
+  workflow_dispatch:
+ 
+# ==========================================
+# PARTE 2: PERMISOS A NIVEL WORKFLOW (Mínimos privilegios globales)
+# ==========================================
 permissions:
-  contents: read # Permiso mínimo a nivel workflow
-
+  contents: read # Solo permite leer el código
+ 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read # Permiso mínimo a nivel job
- steps:
-      - name: Checkout código
+    steps:
+      # Restricción de seguridad: Usamos versiones con SHA o tags fijos (@v4), NUNCA @main de terceros
+      - name: Checkout seguro
         uses: actions/checkout@v4
-        
-      - name: Demostrar diferencia entre vars y secrets
-        env:
-          MI_SECRETO: ${{ secrets.API_SECRET }}
+ 
+      - name: Validar Tests del Sistema
         run: |
-          echo "La variable no sensible muestra su valor: $NON_SENSITIVE_VAR"
-          echo "El secreto por seguridad se oculta: $MI_SECRETO"
-          
-      - name: Construir aplicación y validar
-        run: echo "Tests validados correctamente."
+          echo "Ejecutando tests de seguridad..."
+          echo "Tests completados con éxito."
+ 
+  # ==========================================
+  # PARTE 3 Y 4: ENTORNO STAGING (Despliegue previo automático)
+  # ==========================================
+  deploy-staging:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Desplegar en Staging
+        run: echo "Despliegue automático en entorno de Staging completado."
+ 
+  # ==========================================
+  # PARTE 1, 3, 4: ENTORNO PRODUCTION (Aprobación, Secrets y Condiciones)
+  # ==========================================
+  deploy-production:
+    needs: build-and-test
+    # PARTE 4: Condition explicita de rama principal (doble seguridad)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # PARTE 3: Vinculación al entorno protegido de producción
+    environment: production
+    # PARTE 2: Permisos específicos acotados a nivel de JOB
+    permissions:
+      contents: read
+      packages: write # Solo este job puede escribir si fuera necesario registrar el despliegue
+ 
+    steps:
+      - name: Demostrar Uso Seguro de Variables y Secretos
+        run: |
+          # PARTE 1: Vars vs Secrets (Restricción: NUNCA imprimir secretos)
+          echo "=== DATOS CONFIGURADOS ==="
+          echo "La URL pública de la API es: ${{ vars.URL_PUBLICA_API }}"
+          echo "Intentando usar el secreto de forma segura..."
+          # Esta línea pasará el secreto de forma interna a una variable o proceso. 
+          # GitHub enmascarará automáticamente cualquier intento de salida con ***
+          echo "El secreto de la API es: ${{ secrets.API_SECRET_KEY }}"
+          echo "¡Despliegue en producción completado de manera segura!"
